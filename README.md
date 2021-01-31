@@ -1,2 +1,2 @@
-# Tolkyn
-Tolkyn is an online streaming and podcasting service!
+# Tolqyn
+Tolqyn is an online streaming and podcasting service!
