@@ -3,7 +3,7 @@ name: Deploy to Heroku (Frontend)
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend.yml'
