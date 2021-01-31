@@ -10,7 +10,7 @@
   },
   "config": {
     "commitizen": {
-      "path": "../cz-config.js"
+      "path": "./cz-config.js"
     }
   },
   "dependencies": {
