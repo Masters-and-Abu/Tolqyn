@@ -1,6 +1,6 @@
-const custom = require("@digitalroute/cz-conventional-changelog-for-jira/configurable");
+const custom = require('@digitalroute/cz-conventional-changelog-for-jira/configurable');
 
 module.exports = custom({
-  jiraPrefix: "TOL",
+  jiraPrefix: 'TOL',
   skipScope: true,
 });
