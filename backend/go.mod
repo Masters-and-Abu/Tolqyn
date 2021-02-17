@@ -1,4 +1,4 @@
-module backend
+module github.com/Masters-and-Abu/Tolqyn
 
 // +heroku goVersion go1.15
 go 1.15
