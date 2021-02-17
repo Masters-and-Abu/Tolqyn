@@ -1,30 +1,25 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"os"
 
-	"github.com/gin-gonic/gin"
-	_ "github.com/heroku/x/hmetrics/onload"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	asdasdasdasd
-	port := os.Getenv("PORT")
+	r := mux.NewRouter()
 
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
+	r.HandleFunc("/check", check)
 
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.LoadHTMLGlob("templates/*.tmpl.html")
-	router.Static("/static", "static")
+	http.ListenAndServe(":8000", r)
 
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl.html", nil)
-	})
-
-	router.Run(":" + port)
 }
+
+
+func check(writer http.ResponseWriter, request *http.Request) {
+	writer.Write([]byte("sosatb"))
+}
+
+
+
+
