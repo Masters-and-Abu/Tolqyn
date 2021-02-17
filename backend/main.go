@@ -3,19 +3,36 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 	"os"
-	"./mongoConnector"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+func ConnectClient(uri string) Client {
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 
-var db mongoConnector.Client
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+	return Client{Client: client}
+}
+
+// Database : mongoConnector type
+type Client struct {
+	Client *mongo.Client
+}
+
+
+var db Client
 
 func goDotEnvVariable(key string) string {
 
@@ -31,7 +48,7 @@ func goDotEnvVariable(key string) string {
 
 func main() {
 
-	db = mongoConnector.ConnectClient(goDotEnvVariable("MONGO_URI"))
+	db = ConnectClient(goDotEnvVariable("MONGO_URI"))
 
 	r := mux.NewRouter()
 
