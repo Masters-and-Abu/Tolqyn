@@ -2,20 +2,20 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"net/http"
 	"os"
-	"time"
-
+	"./mongoConnector"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 )
 
 
-var db mongo.Client
+var db mongoConnector.Client
 
 func goDotEnvVariable(key string) string {
 
@@ -31,42 +31,48 @@ func goDotEnvVariable(key string) string {
 
 func main() {
 
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(goDotEnvVariable("MONGO_URI")))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
-	db = *client
-
-	err = db.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer db.Disconnect(ctx)
-
-
-	database := db.Database("tolqyn")
-	usersCollection := database.Collection("users")
-
-	usersCollection.InsertOne(ctx, bson.D{
-		{Key: "name", Value: "Abu"},
-	})
+	db = mongoConnector.ConnectClient(goDotEnvVariable("MONGO_URI"))
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/register", regi)
+	r.HandleFunc("/getList", getList)
 
+
+	fmt.Println("Listening on port 8000")
 	http.ListenAndServe(":8000", r)
 
 }
 
+type User struct {
+	Name string  `json:"name"`
+}
 
-func check(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte("sosatb"))
+func getList(writer http.ResponseWriter, request *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err := db.Client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Client.Disconnect(ctx)
+
+	users := db.Client.Database("tolqyn").Collection("users")
+
+	findOptions := options.Find()
+	cur, err := users.Find(context.TODO(), bson.D{{}}, findOptions)
+
+	for cur.Next(context.TODO()) {
+		usr := User{}
+		err := cur.Decode(&usr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+
+		writer.Write([]byte(usr.Name+"\n"))
+	}
+
 }
 
 
