@@ -38,8 +38,8 @@ func main() {
 	r.HandleFunc("/getList", getList)
 
 
-	fmt.Println("Listening on port 8000")
-	http.ListenAndServe(":8000", r)
+	fmt.Println("Listening on port " + goDotEnvVariable("PORT"))
+	http.ListenAndServe(":"+goDotEnvVariable("PORT"), r)
 
 }
 
