@@ -1,1 +1,1 @@
-web: "make run"
+web: bin/go-getting-started

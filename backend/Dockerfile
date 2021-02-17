@@ -1,23 +1,21 @@
-FROM golang:latest
+FROM heroku/heroku:18-build as build
 
-
-# Set the Current Working Directory inside the container
+COPY . /app
 WORKDIR /app
 
-# Copy go mod and sum files
-COPY go.mod go.sum ./
+# Setup buildpack
+RUN mkdir -p /tmp/buildpack/heroku/go /tmp/build_cache /tmp/env
+RUN curl https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/go.tgz | tar xz -C /tmp/buildpack/heroku/go
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
-RUN go mod download
+#Execute Buildpack
+RUN STACK=heroku-18 /tmp/buildpack/heroku/go/bin/compile /app /tmp/build_cache /tmp/env
 
-# Copy the source from the current directory to the Working Directory inside the container
-COPY . .
+# Prepare final, minimal image
+FROM heroku/heroku:18
 
-# Build the Go app
-RUN go build -o main .
-
-# Expose port 8080 to the outside world
-EXPOSE 8000
-
-# Command to run the executable
-CMD ["make","run"]
+COPY --from=build /app /app
+ENV HOME /app
+WORKDIR /app
+RUN useradd -m heroku
+USER heroku
+CMD /app/bin/go-getting-started
