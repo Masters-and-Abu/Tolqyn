@@ -1,4 +1,4 @@
-module github.com/Masters-and-Abu/Tolqyn/backend
+module github.com/Masters-and-Abu/Tolqyn-backend
 
 go 1.15
 
