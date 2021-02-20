@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Masters-and-Abu/Tolqyn/backend/auth"
 	"github.com/Masters-and-Abu/Tolqyn/backend/database"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -40,20 +41,18 @@ func main() {
 	defer database.DB.Client.Disconnect(ctx)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/getList", getList)
+	r.HandleFunc("/register", auth.Register)
 
 	fmt.Println("Listening on port "+port)
 	http.ListenAndServe(":"+port, r)
 }
 
 
-type User struct {
-	Name string  `json:"name"`
-}
+
 
 func getList(writer http.ResponseWriter, request *http.Request) {
 
-	users := db.Client.Database("tolqyn").Collection("users")
+	users := database.DB.Client.Database("tolqyn").Collection("users")
 
 	findOptions := options.Find()
 	cur, err := users.Find(context.TODO(), bson.D{{}}, findOptions)
@@ -65,13 +64,13 @@ func getList(writer http.ResponseWriter, request *http.Request) {
 		if(cur==nil){
 			break
 		}
-		usr := User{}
+		usr := auth.User{}
 		err := cur.Decode(&usr)
 		if err != nil {
 			fmt.Println("problem in decode")
 		}
 
 
-		writer.Write([]byte(usr.Name+"\n"))
+		writer.Write([]byte(usr.Login+"\n"))
 	}
 }
