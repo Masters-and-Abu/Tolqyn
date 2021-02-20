@@ -31,7 +31,13 @@ var db database.Client
 func main() {
 	db = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
 	port := goDotEnvVariable("PORT")
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
+	err := db.Client.Connect(ctx)
+	if err!=nil{
+		log.Fatal(err)
+	}
+	defer db.Client.Disconnect(ctx)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/getList", getList)
@@ -46,29 +52,30 @@ type User struct {
 }
 
 func getList(writer http.ResponseWriter, request *http.Request) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	err := db.Client.Connect(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	defer db.Client.Disconnect(ctx)
+
+
 
 	users := db.Client.Database("tolqyn").Collection("users")
 
 	findOptions := options.Find()
 	cur, err := users.Find(context.TODO(), bson.D{{}}, findOptions)
 
+	if err!=nil{
+		log.Fatal(err)
+	}
 	for cur.Next(context.TODO()) {
+		if(cur==nil){
+			break
+		}
 		usr := User{}
 		err := cur.Decode(&usr)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("problem in decode")
 		}
 
 
 		writer.Write([]byte(usr.Name+"\n"))
 	}
-
 }
