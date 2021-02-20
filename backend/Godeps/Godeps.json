@@ -356,6 +356,10 @@
 			"Rev": "eec23a3978adcfd26c29f4153eaa3e3d9b2cc53a"
 		},
 		{
+			"ImportPath": "golang.org/x/crypto/scrypt",
+			"Rev": "eec23a3978adcfd26c29f4153eaa3e3d9b2cc53a"
+		},
+		{
 			"ImportPath": "golang.org/x/net/context",
 			"Rev": "5f4716e94777e714bc2fb3e3a44599cb40817aac"
 		},
