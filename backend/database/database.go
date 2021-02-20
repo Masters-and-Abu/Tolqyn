@@ -21,3 +21,5 @@ func ConnectClient(uri string) Client {
 type Client struct {
 	Client *mongo.Client
 }
+
+var DB Client
