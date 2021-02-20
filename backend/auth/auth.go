@@ -1,10 +1,11 @@
 package auth
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"github.com/Masters-and-Abu/Tolqyn/backend/database"
-	"golang.org/x/crypto/bcrypt"
+	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/net/context"
 	"log"
 	"net/http"
@@ -16,6 +17,11 @@ type User struct {
 	Pass string  `json:"pass"`
 }
 
+type Token struct {
+	Token string  `json:"token"`
+}
+
+
 func hashAndSalt(pwd []byte) string {
 
 	// Use GenerateFromPassword to hash & salt pwd.
@@ -23,12 +29,9 @@ func hashAndSalt(pwd []byte) string {
 	// package along with DefaultCost & MaxCost.
 	// The cost can be any value you want provided it isn't lower
 	// than the MinCost (4)
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
-	if err != nil {
-		log.Println(err)
-	}    // GenerateFromPassword returns a byte slice so we need to
-	// convert the bytes to a string and return it
-	return string(hash)
+	hash := md5.Sum(pwd)
+
+	return string(hash[:])
 }
 
 func Register(w http.ResponseWriter, r *http.Request){
@@ -36,16 +39,56 @@ func Register(w http.ResponseWriter, r *http.Request){
 		decoder := json.NewDecoder(r.Body)
 		obj := User{}
 		err := decoder.Decode(&obj)
-		obj.Pass = hashAndSalt([]byte(obj.Pass+obj.Login))
+		if err != nil {
+			log.Println(err)
+		}
+		obj.Pass = hashAndSalt([]byte(obj.Pass))
 		users := database.DB.Client.Database("tolqyn").Collection("users")
 
-		insertResult, err := users.InsertOne(context.TODO(), User{obj.Login,obj.Pass})
+		insertResult, err := users.InsertOne(context.TODO(), obj)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		fmt.Println("Inserted a single document: ", insertResult.InsertedID)
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+
+func Auth(w http.ResponseWriter, r *http.Request){
+	if r.Method == "POST" {
+		decoder := json.NewDecoder(r.Body)
+		obj := User{}
+		err := decoder.Decode(&obj)
+		if err != nil {
+			log.Println(err)
+		}
+		obj.Pass = hashAndSalt([]byte(obj.Pass))
+
+
+		users := database.DB.Client.Database("tolqyn").Collection("users")
+		res := User{}
+		filter := bson.D{{"login", obj.Login}}
+		err = users.FindOne(context.TODO(), filter).Decode(&res)
+		if err!=nil{
+			log.Println(err)
+		}
+
+		if(res.Pass==obj.Pass){
+			tkn := Token{Token: res.Pass}
+			w.WriteHeader(http.StatusOK)
+			resp, err := json.Marshal(tkn)
+			if err!=nil{
+				log.Println(err)
+			}
+			w.Write(resp)
+		}else{
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+
+
+
 	}
 }

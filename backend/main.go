@@ -42,6 +42,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/register", auth.Register)
+	r.HandleFunc("/auth", auth.Auth)
 
 	fmt.Println("Listening on port "+port)
 	http.ListenAndServe(":"+port, r)
