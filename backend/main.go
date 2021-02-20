@@ -1,17 +1,74 @@
 package main
 
 import (
-	"io"
+	"fmt"
+	"github.com/Masters-and-Abu/Tolqyn/backend/database"
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+	"github.com/prometheus/common/log"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"golang.org/x/net/context"
 	"net/http"
 	"os"
+	"time"
 )
 
-func hello(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello world!")
+func goDotEnvVariable(key string) string {
+
+	// load .env file
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	return os.Getenv(key)
 }
 
+var db database.Client
+
 func main() {
-	port := os.Getenv("PORT")
-	http.HandleFunc("/", hello)
-	http.ListenAndServe(":"+port, nil)
+	db = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
+	port := goDotEnvVariable("PORT")
+
+
+	r := mux.NewRouter()
+	r.HandleFunc("/getList", getList)
+
+	fmt.Println("Listening on port "+port)
+	http.ListenAndServe(":"+port, r)
+}
+
+
+type User struct {
+	Name string  `json:"name"`
+}
+
+func getList(writer http.ResponseWriter, request *http.Request) {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	err := db.Client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Client.Disconnect(ctx)
+
+	users := db.Client.Database("tolqyn").Collection("users")
+
+	findOptions := options.Find()
+	cur, err := users.Find(context.TODO(), bson.D{{}}, findOptions)
+
+	for cur.Next(context.TODO()) {
+		usr := User{}
+		err := cur.Decode(&usr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+
+		writer.Write([]byte(usr.Name+"\n"))
+	}
+
 }
