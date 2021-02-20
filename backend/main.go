@@ -26,18 +26,18 @@ func goDotEnvVariable(key string) string {
 	return os.Getenv(key)
 }
 
-var db database.Client
+
 
 func main() {
-	db = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
+	database.DB = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
 	port := goDotEnvVariable("PORT")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	err := db.Client.Connect(ctx)
+	err := database.DB.Client.Connect(ctx)
 	if err!=nil{
 		log.Fatal(err)
 	}
-	defer db.Client.Disconnect(ctx)
+	defer database.DB.Client.Disconnect(ctx)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/getList", getList)
