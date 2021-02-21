@@ -5,7 +5,7 @@ import Waves from '../components/Waves';
 import AuthModal from './Modals/AuthModal';
 
 const { Header } = Layout;
-
+// ya l'yu cristal
 export default function Main() {
   return (
     <>
