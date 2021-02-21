@@ -21,13 +21,12 @@ func goDotEnvVariable(key string) string {
 	err := godotenv.Load(".env")
 
 	if err != nil {
+
 		fmt.Println("Error loading .env file")
 	}
 
 	return os.Getenv(key)
 }
-
-
 
 func main() {
 	database.DB = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
@@ -35,7 +34,7 @@ func main() {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	err := database.DB.Client.Connect(ctx)
-	if err!=nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	defer database.DB.Client.Disconnect(ctx)
@@ -44,12 +43,9 @@ func main() {
 	r.HandleFunc("/register", auth.Register)
 	r.HandleFunc("/auth", auth.Auth)
 
-	fmt.Println("Listening on port "+port)
+	fmt.Println("Listening on port " + port)
 	http.ListenAndServe(":"+port, r)
 }
-
-
-
 
 func getList(writer http.ResponseWriter, request *http.Request) {
 
@@ -58,11 +54,11 @@ func getList(writer http.ResponseWriter, request *http.Request) {
 	findOptions := options.Find()
 	cur, err := users.Find(context.TODO(), bson.D{{}}, findOptions)
 
-	if err!=nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	for cur.Next(context.TODO()) {
-		if(cur==nil){
+		if cur == nil {
 			break
 		}
 		usr := auth.User{}
@@ -71,7 +67,6 @@ func getList(writer http.ResponseWriter, request *http.Request) {
 			fmt.Println("problem in decode")
 		}
 
-
-		writer.Write([]byte(usr.Login+"\n"))
+		writer.Write([]byte(usr.Login + "\n"))
 	}
 }

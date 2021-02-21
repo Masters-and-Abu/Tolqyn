@@ -13,7 +13,6 @@ func ConnectClient(uri string) Client {
 		log.Fatal(err)
 	}
 
-
 	return Client{Client: client}
 }
 
