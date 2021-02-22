@@ -1,6 +1,6 @@
 import { Checkbox } from 'antd';
 import { Formik } from 'formik';
-import { Form, Input, SubmitButton } from 'formik-antd';
+import { Form, Input, } from 'formik-antd';
 import React from 'react';
 import { SignInSchema } from '../../public/Validation/validation';
 
@@ -47,7 +47,7 @@ const SignIn = ({ handleOk }: SignInPropType) => {
               }}
             >
               <Checkbox onChange={handleRememberMeChange}>Remember me</Checkbox>
-              <SubmitButton style={{ marginTop: '3.3vh' }}>Sign in</SubmitButton>
+              <button className="ant-btn ant-btn-primary" style={{ marginTop: '3.3vh' }}>Sign in</button>
             </div>
           </Form>
         )}

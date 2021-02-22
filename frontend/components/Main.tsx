@@ -106,6 +106,11 @@ export default function Main() {
           .auth-footer-span:hover {
             color: lightblue;
           }
+          
+          .advice-list .ant-checkbox-wrapper, .advice-list span, .advice-list input {
+            cursor: context-menu!important;
+            color: black!important;
+          }
 
           @media (max-width: 768px) {
             .header {

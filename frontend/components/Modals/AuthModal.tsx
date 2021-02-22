@@ -1,11 +1,9 @@
-import { Button, Menu } from 'antd';
+import { Menu } from 'antd';
 import { Modal } from 'antd';
-import { sign } from 'crypto';
-import { Formik } from 'formik';
 
 import React, { useEffect, useState } from 'react';
-import AuthTabs from '../Forms/AuthTabs';
 import SignIn from '../Forms/SignIn';
+import SignUp from '../Forms/SignUp';
 
 type ShowAuthModalPropTypes = {
   signType: string;
@@ -111,7 +109,7 @@ const AuthModal = () => {
             </>)
         }
       >
-        {state.signType === '1' ? <SignIn handleOk={handleOk} /> : null}
+        {state.signType === '1' ? <SignIn handleOk={handleOk} /> : <SignUp handleOk={handleOk} />}
       </Modal>
     </Menu>
   );
