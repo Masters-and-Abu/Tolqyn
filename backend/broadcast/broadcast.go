@@ -186,11 +186,15 @@ func StartSession(sdp string){ // nolint:gocognit
 
 
 func SDP(w http.ResponseWriter, r *http.Request){
+	if cons.sdpCons != nil{
+		cons.sdpCons<-"stop"
+	}
 	cons.sdpCons = make(chan string)
 	cons.sdpResp = make(chan string)
 	fmt.Println(cons.sdpResp)
 	body, _ := ioutil.ReadAll(r.Body)
-	cons.sdpCons <- "stop"
+
+	fmt.Println("stop")
 	go StartSession(string(body))
 	resp := <-cons.sdpResp
 	w.Write([]byte(resp))
