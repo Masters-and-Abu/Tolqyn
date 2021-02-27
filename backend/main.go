@@ -2,16 +2,17 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/Masters-and-Abu/Tolqyn/backend/auth"
-	"github.com/Masters-and-Abu/Tolqyn/backend/database"
 	"github.com/Masters-and-Abu/Tolqyn/backend/broadcast"
+	"github.com/Masters-and-Abu/Tolqyn/backend/database"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/common/log"
 	"golang.org/x/net/context"
-	"net/http"
-	"os"
-	"time"
 )
 
 func goDotEnvVariable(key string) string {

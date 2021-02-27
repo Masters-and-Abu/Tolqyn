@@ -1,6 +1,5 @@
 package broadcast
 
-
 import (
 	"errors"
 	"fmt"
@@ -9,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pion/rtcp"
-	"github.com/pion/webrtc"
 	"github.com/Masters-and-Abu/Tolqyn/backend/signal"
+	"github.com/pion/rtcp"
+	"github.com/pion/webrtc/v3"
 )
 
 const (
