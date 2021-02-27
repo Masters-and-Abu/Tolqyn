@@ -67,7 +67,7 @@ func StartSession(sdp string){ // nolint:gocognit
 		}()
 
 		// Create a local track, all our SFU clients will be fed via this track
-		localTrack, newTrackErr := webrtc.NewTrackLocalStaticRTP(remoteTrack.Codec().RTPCodecCapability, "video", "pion")
+		localTrack, newTrackErr := webrtc.NewTrackLocalStaticRTP(remoteTrack.Codec().RTPCodecCapability, "audio", "pion")
 		if newTrackErr != nil {
 			panic(newTrackErr)
 		}
