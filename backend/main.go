@@ -42,6 +42,7 @@ func main() {
 	r.HandleFunc("/register", auth.Register)
 	r.HandleFunc("/auth", auth.Auth)
 	r.HandleFunc("/sdp", broadcast.SDP)
+	r.HandleFunc("/connect", broadcast.SDPConnect)
 
 	fmt.Println("Listening on port " + port)
 	http.ListenAndServe(":"+port, r)

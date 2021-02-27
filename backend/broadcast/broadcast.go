@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc"
+	"github.com/pion/webrtc/v3"
 	"github.com/Masters-and-Abu/Tolqyn/backend/signal"
 )
 
@@ -18,10 +18,14 @@ const (
 	rtcpPLIInterval = time.Second * 3
 )
 
-var cons map[string]chan string
+type Connections struct{
+	sdpResp chan string
+	sdpCons chan string
+}
 
+var cons Connections
 
-func StartSession(sdp string, sdpResp *chan string){ // nolint:gocognit
+func StartSession(sdp string){ // nolint:gocognit
 	// Everything below is the Pion WebRTC API, thanks for using it ❤️.
 	offer := webrtc.SessionDescription{}
 
@@ -110,7 +114,8 @@ func StartSession(sdp string, sdpResp *chan string){ // nolint:gocognit
 	<-gatherComplete
 
 	// Get the LocalDescription and take it to base64 so we can paste in browser
-	(*sdpResp)<-signal.Encode(*peerConnection.LocalDescription())
+	cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
+
 	//fmt.Println(signal.Encode(*peerConnection.LocalDescription()))
 
 	localTrack := <-localTrackChan
@@ -119,7 +124,7 @@ func StartSession(sdp string, sdpResp *chan string){ // nolint:gocognit
 		fmt.Println("Curl an base64 SDP to start sendonly peer connection")
 
 		recvOnlyOffer := webrtc.SessionDescription{}
-		signal.Decode(<-cons[sdp], &recvOnlyOffer)
+		signal.Decode(<-cons.sdpCons, &recvOnlyOffer)
 
 		// Create a new PeerConnection
 		peerConnection, err := webrtc.NewPeerConnection(peerConnectionConfig)
@@ -171,16 +176,26 @@ func StartSession(sdp string, sdpResp *chan string){ // nolint:gocognit
 		<-gatherComplete
 
 		// Get the LocalDescription and take it to base64 so we can paste in browser
-		fmt.Println(signal.Encode(*peerConnection.LocalDescription()))
+		cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
 	}
 }
 
 
 func SDP(w http.ResponseWriter, r *http.Request){
+	cons.sdpCons = make(chan string)
+	cons.sdpResp = make(chan string)
+	fmt.Println(cons.sdpResp)
 	body, _ := ioutil.ReadAll(r.Body)
-	sdpResp := make(chan string)
-	go StartSession(string(body), &sdpResp)
-	resp := <-sdpResp
+	go StartSession(string(body))
+	resp := <-cons.sdpResp
 	w.Write([]byte(resp))
 
+}
+
+
+func SDPConnect(w http.ResponseWriter, r *http.Request){
+	body, _ := ioutil.ReadAll(r.Body)
+	cons.sdpCons<-string(body)
+	resp := <-cons.sdpResp
+	w.Write([]byte(resp))
 }
