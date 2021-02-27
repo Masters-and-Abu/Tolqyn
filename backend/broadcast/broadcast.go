@@ -124,7 +124,11 @@ func StartSession(sdp string){ // nolint:gocognit
 		fmt.Println("Curl an base64 SDP to start sendonly peer connection")
 
 		recvOnlyOffer := webrtc.SessionDescription{}
-		signal.Decode(<-cons.sdpCons, &recvOnlyOffer)
+		con := <-cons.sdpCons
+		if(con=="stop"){
+			return
+		}
+		signal.Decode(con, &recvOnlyOffer)
 
 		// Create a new PeerConnection
 		peerConnection, err := webrtc.NewPeerConnection(peerConnectionConfig)
@@ -186,6 +190,7 @@ func SDP(w http.ResponseWriter, r *http.Request){
 	cons.sdpResp = make(chan string)
 	fmt.Println(cons.sdpResp)
 	body, _ := ioutil.ReadAll(r.Body)
+	cons.sdpCons <- "stop"
 	go StartSession(string(body))
 	resp := <-cons.sdpResp
 	w.Write([]byte(resp))
