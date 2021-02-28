@@ -27,6 +27,10 @@ func goDotEnvVariable(key string) string {
 	return os.Getenv(key)
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func main() {
 	database.DB = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
 	port := goDotEnvVariable("PORT")
@@ -43,6 +47,7 @@ func main() {
 	r.HandleFunc("/auth", auth.Auth)
 	r.HandleFunc("/sdp", broadcast.SDP)
 	r.HandleFunc("/connect", broadcast.SDPConnect)
+	r.Use(mux.CORSMethodMiddleware(r))
 
 	fmt.Println("Listening on port " + port)
 	http.ListenAndServe(":"+port, r)

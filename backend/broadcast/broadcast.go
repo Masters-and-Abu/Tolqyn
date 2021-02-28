@@ -186,6 +186,7 @@ func StartSession(sdp string){ // nolint:gocognit
 
 
 func SDP(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if cons.sdpCons != nil{
 		cons.sdpCons<-"stop"
 	}
@@ -203,6 +204,7 @@ func SDP(w http.ResponseWriter, r *http.Request){
 
 
 func SDPConnect(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	body, _ := ioutil.ReadAll(r.Body)
 	cons.sdpCons<-string(body)
 	resp := <-cons.sdpResp

@@ -32,6 +32,7 @@ func hashAndSalt(pwd []byte) string {
 	return string(hash[:])
 }
 func Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "POST" {
 		decoder := json.NewDecoder(r.Body)
 		obj := User{}
@@ -67,6 +68,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func Auth(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "POST" {
 		decoder := json.NewDecoder(r.Body)
 		obj := User{}
