@@ -26,7 +26,7 @@ const Demo: React.FC = () => {
       const pc = new RTCPeerConnection({
         iceServers: [
           {
-            urls: 'stun:stun.l.google.com:19302',
+            urls: 'stun:stun1.l.google.com:19302',
           },
         ],
       });
@@ -44,7 +44,6 @@ const Demo: React.FC = () => {
             axios
               .post('https://tolqyn-backend-dev.herokuapp.com/sdp', session, config)
               .then((res) => {
-                setStartDisabled(true);
                 key = res.data;
               })
               .then(() =>
@@ -53,9 +52,6 @@ const Demo: React.FC = () => {
                   counting: true,
                 })),
               )
-              .then(() => {
-                setStartDisabled(false);
-              })
               .catch(function (error) {
                 console.log(error);
               });
@@ -63,11 +59,7 @@ const Demo: React.FC = () => {
             axios
               .post('https://tolqyn-backend-dev.herokuapp.com/connect', session, config)
               .then((res) => {
-                setStartDisabled(true);
                 key = res.data;
-              })
-              .then(() => {
-                setStartDisabled(false);
               })
               .catch(function (error) {
                 console.log(error);
@@ -132,14 +124,12 @@ const Demo: React.FC = () => {
   });
 
   const [activeKey, setActiveKey] = useState(-1);
-  const [startDisabled, setStartDisabled] = useState(false);
 
   return (
     <>
       <div id="signalingContainer" style={{ display: 'none', textAlign: 'center' }}>
-        <Button size="large" disabled={!startDisabled} onClick={() => (window as any).startSession()}> Start Session </Button>
+        <Button size="large" onClick={() => (window as any).startSession()}> Start Session </Button>
       </div>
-      {!state.counting && startDisabled ? <h3>We are preparing everything for you...</h3> : null}
       <video id="video1" width="160" height="120" autoPlay muted />
       <div style={{ display: 'flex', textAlign: 'center' }}>
         <div className="createSessionButton">
