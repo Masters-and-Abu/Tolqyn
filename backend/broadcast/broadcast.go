@@ -119,7 +119,7 @@ func StartSession(sdp string){ // nolint:gocognit
 	cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
 
 	//fmt.Println(signal.Encode(*peerConnection.LocalDescription()))
-
+	fmt.Println("Working")
 	localTrack := <-localTrackChan
 	for {
 		fmt.Println("")
@@ -200,6 +200,7 @@ func SDP(w http.ResponseWriter, r *http.Request){
 	}
 	time.Sleep(time.Second)
 
+	cons.sdpCons = make(chan string)
 	cons.sdpResp = make(chan string)
 	fmt.Println(cons.sdpResp)
 	body, _ := ioutil.ReadAll(r.Body)
