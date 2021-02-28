@@ -47,6 +47,7 @@ func main() {
 	r.HandleFunc("/auth", auth.Auth)
 	r.HandleFunc("/sdp", broadcast.SDP)
 	r.HandleFunc("/connect", broadcast.SDPConnect)
+	r.HandleFunc("/close", broadcast.SDPClose)
 	r.Use(mux.CORSMethodMiddleware(r))
 
 	fmt.Println("Listening on port " + port)
