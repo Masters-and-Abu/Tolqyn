@@ -128,9 +128,12 @@ func StartSession(sdp string){ // nolint:gocognit
 		recvOnlyOffer := webrtc.SessionDescription{}
 		con := <-cons.sdpCons
 		if(con=="stop"){
+			fmt.Println("Session stopped")
 			return
 		}
 		signal.Decode(con, &recvOnlyOffer)
+		fmt.Println("Decoding listener")
+
 
 		// Create a new PeerConnection
 		peerConnection, err := webrtc.NewPeerConnection(peerConnectionConfig)
@@ -183,6 +186,7 @@ func StartSession(sdp string){ // nolint:gocognit
 
 		// Get the LocalDescription and take it to base64 so we can paste in browser
 		cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
+		fmt.Println("Key generated")
 
 	}
 }
@@ -194,8 +198,6 @@ func SDP(w http.ResponseWriter, r *http.Request){
 	cons.sdpResp = make(chan string)
 	fmt.Println(cons.sdpResp)
 	body, _ := ioutil.ReadAll(r.Body)
-
-	fmt.Println("stop")
 	go StartSession(string(body))
 	resp := <-cons.sdpResp
 	w.Write([]byte(resp))
