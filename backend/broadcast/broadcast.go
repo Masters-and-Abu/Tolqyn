@@ -206,6 +206,9 @@ func SDP(w http.ResponseWriter, r *http.Request){
 func SDPConnect(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	body, _ := ioutil.ReadAll(r.Body)
+	if(cons.sdpCons == nil){
+		fmt.Println("Abu dodik")
+	}
 	cons.sdpCons<-string(body)
 	resp := <-cons.sdpResp
 	w.Write([]byte(resp))
