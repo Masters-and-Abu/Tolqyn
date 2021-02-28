@@ -218,8 +218,8 @@ func SDPClose(w http.ResponseWriter, r *http.Request){
 		cons.sdpCons<-"stop"
 	}
 	time.Sleep(time.Second)
-	cons.sdpCons = make(chan string)
-	cons.sdpResp = make(chan string)
+	cons.sdpCons = nil
+	cons.sdpResp = nil
 }
 
 func SDPConnected(w http.ResponseWriter, r *http.Request){
