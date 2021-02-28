@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pion/rtcp"
@@ -24,6 +25,7 @@ type Connections struct{
 }
 
 var cons Connections
+var ctr int
 
 func StartSession(sdp string){ // nolint:gocognit
 	// Everything below is the Pion WebRTC API, thanks for using it ❤️.
@@ -181,6 +183,7 @@ func StartSession(sdp string){ // nolint:gocognit
 
 		// Get the LocalDescription and take it to base64 so we can paste in browser
 		cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
+
 	}
 }
 
@@ -209,6 +212,7 @@ func SDPConnect(w http.ResponseWriter, r *http.Request){
 }
 
 func SDPClose(w http.ResponseWriter, r *http.Request){
+	ctr = 0
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if cons.sdpCons != nil{
 		cons.sdpCons<-"stop"
@@ -216,4 +220,14 @@ func SDPClose(w http.ResponseWriter, r *http.Request){
 	time.Sleep(time.Second)
 	cons.sdpCons = make(chan string)
 	cons.sdpResp = make(chan string)
+}
+
+func SDPConnected(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	ctr++
+}
+
+func SDPCurrent(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(strconv.Itoa(ctr)))
 }

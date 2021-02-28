@@ -48,6 +48,8 @@ func main() {
 	r.HandleFunc("/sdp", broadcast.SDP)
 	r.HandleFunc("/connect", broadcast.SDPConnect)
 	r.HandleFunc("/close", broadcast.SDPClose)
+	r.HandleFunc("/connected", broadcast.SDPConnected)
+	r.HandleFunc("/number", broadcast.SDPCurrent)
 	r.Use(mux.CORSMethodMiddleware(r))
 
 	fmt.Println("Listening on port " + port)
