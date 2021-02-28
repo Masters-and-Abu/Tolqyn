@@ -208,6 +208,8 @@ func SDPConnect(w http.ResponseWriter, r *http.Request){
 	body, _ := ioutil.ReadAll(r.Body)
 	if(cons.sdpCons == nil){
 		fmt.Println("Abu dodik")
+		w.Write([]byte("Tima xui"))
+		return
 	}
 	cons.sdpCons<-string(body)
 	resp := <-cons.sdpResp
