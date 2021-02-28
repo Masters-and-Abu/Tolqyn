@@ -37,7 +37,7 @@ func StartSession(sdp string){ // nolint:gocognit
 	peerConnectionConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:stun.l.google.com:19302"},
+				URLs: []string{"stun:stun1.l.google.com:19302"},
 			},
 		},
 	}
@@ -119,8 +119,9 @@ func StartSession(sdp string){ // nolint:gocognit
 	cons.sdpResp<-signal.Encode(*peerConnection.LocalDescription())
 
 	//fmt.Println(signal.Encode(*peerConnection.LocalDescription()))
-	fmt.Println("Working")
+
 	localTrack := <-localTrackChan
+	fmt.Println("Working")
 	for {
 		fmt.Println("")
 		fmt.Println("Curl an base64 SDP to start sendonly peer connection")
