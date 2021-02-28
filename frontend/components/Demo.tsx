@@ -14,17 +14,43 @@ const Demo: React.FC = () => {
 
   if (typeof window !== 'undefined') {
     window.createSession = (isPublisher) => {
-      let pc = new RTCPeerConnection({
+      const pc = new RTCPeerConnection({
         iceServers: [
           {
             urls: 'stun:stun.l.google.com:19302',
           },
         ],
       });
+      let key;
       pc.oniceconnectionstatechange = (e) => log(pc.iceConnectionState);
       pc.onicecandidate = (event) => {
         if (event.candidate === null) {
-          document.getElementById('localSessionDescription').value = btoa(JSON.stringify(pc.localDescription));
+          const session = btoa(JSON.stringify(pc.localDescription));
+          (document.getElementById('localSessionDescription') as any).value = session;
+          const config = {
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          };
+          if (isPublisher) {
+            axios
+              .post('https://tolqyn-backend-dev.herokuapp.com/sdp', session, config)
+              .then(function (res) {
+                key = res.data;
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          } else {
+            axios
+              .post('https://tolqyn-backend-dev.herokuapp.com/connect', session, config)
+              .then(function (res) {
+                key = res.data;
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          }
         }
       };
 
@@ -33,7 +59,7 @@ const Demo: React.FC = () => {
           .getUserMedia({ video: false, audio: true })
           .then((stream) => {
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-            document.getElementById('video1').srcObject = stream;
+            (document.getElementById('video1') as any).srcObject = stream;
             pc.createOffer()
               .then((d) => pc.setLocalDescription(d))
               .catch(log);
@@ -46,32 +72,28 @@ const Demo: React.FC = () => {
           .catch(log);
 
         pc.ontrack = function (event) {
-          var el = document.getElementById('video1');
-          el.srcObject = event.streams[0];
-          el.autoplay = true;
-          el.controls = true;
+          const el = document.getElementById('video1');
+          (el as any).srcObject = event.streams[0];
+          (el as any).autoplay = true;
+          (el as any).controls = true;
         };
       }
 
-      window.startSession = () => {
-        let sd = document.getElementById('remoteSessionDescription').value;
-        if (sd === '') {
-          return alert('Session Description must not be empty');
-        }
+      (window as any).startSession = () => {
 
         try {
-          pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(sd))));
+          pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(key))));
         } catch (e) {
           alert(e);
         }
       };
 
-      let btns = document.getElementsByClassName('createSessionButton');
+      const btns = document.getElementsByClassName('createSessionButton');
       for (let i = 0; i < btns.length; i++) {
-        btns[i].style = 'display: none';
+        (btns[i] as any).style = 'display: none';
       }
 
-      document.getElementById('signalingContainer').style = 'display: block';
+      (document.getElementById('signalingContainer') as any).style = 'display: block';
     };
   }
 
@@ -84,7 +106,7 @@ const Demo: React.FC = () => {
         Golang base64 Session Description
         <br />
         <textarea id="remoteSessionDescription"></textarea> <br />
-        <button onClick={() => window.startSession()}> Start Session </button>
+        <button onClick={() => (window as any).startSession()}> Start Session </button>
         <br />
       </div>
       <br />
