@@ -4,8 +4,6 @@ import { AudioOutlined } from '@ant-design/icons';
 import Waves from '../components/Waves';
 import AuthModal from './Modals/AuthModal';
 import React, { useState } from 'react';
-import ReactPlayer from 'react-player';
-import GachiPlayer from './GachiPlayer';
 import Demo from './Demo';
 
 const { Header } = Layout;
@@ -122,6 +120,18 @@ export default function Main() {
           .advice-list .ant-checkbox-wrapper, .advice-list span, .advice-list input {
             cursor: context-menu!important;
             color: black!important;
+          }
+
+          .createSessionButton {
+            line-height: 28px;
+            display: flex;
+            flex-direction: column;
+            margin: 5px 50px;
+          }
+
+          .createSessionButton p {
+            transition: all .3s ease-in-out;
+            margin-top: 7px;
           }
 
           @media (max-width: 768px) {

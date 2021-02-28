@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import ReactPlayer from 'react-player';
+import { Button } from 'antd';
+
+import { ToTopOutlined } from '@ant-design/icons';
+import { UserAddOutlined } from '@ant-design/icons';
 
 declare global {
   interface Window {
@@ -15,24 +18,61 @@ const Demo: React.FC = () => {
     time: '',
   });
   const log = (msg) => {
-    document.getElementById('logs').innerHTML += msg + '<br>';
+    console.log(msg);
   };
 
   if (typeof window !== 'undefined') {
     window.createSession = (isPublisher) => {
-      let pc = new RTCPeerConnection({
+      const pc = new RTCPeerConnection({
         iceServers: [
           {
             urls: 'stun:stun.l.google.com:19302',
           },
         ],
       });
-      pc.oniceconnectionstatechange = (e) => {
-        log(pc.iceConnectionState);
-      };
+      let key;
+      pc.oniceconnectionstatechange = (e) => log(pc.iceConnectionState);
       pc.onicecandidate = (event) => {
         if (event.candidate === null) {
-          document.getElementById('localSessionDescription').value = btoa(JSON.stringify(pc.localDescription));
+          const session = btoa(JSON.stringify(pc.localDescription));
+          const config = {
+            headers: {
+              'Content-Type': 'text/plain',
+            },
+          };
+          if (isPublisher) {
+            axios
+              .post('https://tolqyn-backend-dev.herokuapp.com/sdp', session, config)
+              .then((res) => {
+                setStartDisabled(true);
+                key = res.data;
+              })
+              .then(() =>
+                setState((prevState) => ({
+                  ...prevState,
+                  counting: true,
+                })),
+              )
+              .then(() => {
+                setStartDisabled(false);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          } else {
+            axios
+              .post('https://tolqyn-backend-dev.herokuapp.com/connect', session, config)
+              .then((res) => {
+                setStartDisabled(true);
+                key = res.data;
+              })
+              .then(() => {
+                setStartDisabled(false);
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+          }
         }
       };
 
@@ -41,15 +81,9 @@ const Demo: React.FC = () => {
           .getUserMedia({ video: false, audio: true })
           .then((stream) => {
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-            document.getElementById('video1').srcObject = stream;
+            (document.getElementById('video1') as any).srcObject = stream;
             pc.createOffer()
               .then((d) => pc.setLocalDescription(d))
-              .then(() =>
-                setState((prevState) => ({
-                  ...prevState,
-                  counting: true,
-                })),
-              )
               .catch(log);
           })
           .catch(log);
@@ -60,32 +94,27 @@ const Demo: React.FC = () => {
           .catch(log);
 
         pc.ontrack = function (event) {
-          var el = document.getElementById('video1');
-          el.srcObject = event.streams[0];
-          el.autoplay = true;
-          el.controls = true;
+          const el = document.getElementById('video1');
+          (el as any).srcObject = event.streams[0];
+          (el as any).autoplay = true;
+          (el as any).controls = true;
         };
       }
 
-      window.startSession = () => {
-        let sd = document.getElementById('remoteSessionDescription').value;
-        if (sd === '') {
-          return alert('Session Description must not be empty');
-        }
-
+      (window as any).startSession = () => {
         try {
-          pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(sd))));
+          pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(key))));
         } catch (e) {
           alert(e);
         }
       };
 
-      let btns = document.getElementsByClassName('createSessionButton');
+      const btns = document.getElementsByClassName('createSessionButton');
       for (let i = 0; i < btns.length; i++) {
-        btns[i].style = 'display: none';
+        (btns[i] as any).style = 'display: none';
       }
 
-      document.getElementById('signalingContainer').style = 'display: block';
+      (document.getElementById('signalingContainer') as any).style = 'display: block';
     };
   }
 
@@ -102,35 +131,46 @@ const Demo: React.FC = () => {
     return () => clearInterval(interval);
   });
 
+  const [activeKey, setActiveKey] = useState(-1);
+  const [startDisabled, setStartDisabled] = useState(false);
+
   return (
     <>
       <div id="signalingContainer" style={{ display: 'none', textAlign: 'center' }}>
-        Browser base64 Session Description
-        <br />
-        <textarea id="localSessionDescription" readOnly={true}></textarea> <br />
-        Golang base64 Session Description
-        <br />
-        <textarea id="remoteSessionDescription"></textarea> <br />
-        <button onClick={() => window.startSession()}> Start Session </button>
-        <br />
+        <Button size="large" disabled={!startDisabled} onClick={() => (window as any).startSession()}> Start Session </Button>
       </div>
-      <br />
-      Video
-      <br />
-      <video id="video1" width="160" height="120" autoPlay muted></video> <br />
-      <br />
-      <button className="createSessionButton" onClick={() => window.createSession(true)}>
-        Publish a Broadcast
-      </button>
-      <button className="createSessionButton" onClick={() => window.createSession(false)}>
-        Join a Broadcast
-      </button>
-      <br />
-      <br />
-      Logs
-      <br />
-      {state.counting ? <div>You are recording for: {state.time}</div> : null}
-      <div id="logs"></div>
+      {!state.counting && startDisabled ? <h3>We are preparing everything for you...</h3> : null}
+      <video id="video1" width="160" height="120" autoPlay muted />
+      <div style={{ display: 'flex', textAlign: 'center' }}>
+        <div className="createSessionButton">
+          <Button
+            size="large"
+            shape="circle"
+            icon={<ToTopOutlined />}
+            onClick={() => window.createSession(true)}
+            onMouseEnter={() => setActiveKey(0)}
+            onMouseLeave={() => setActiveKey(-1)}
+          />
+          <p style={{ color: activeKey === 0 ? '#40a9ff' : 'black' }}>Publish</p>
+        </div>
+        <div className="createSessionButton">
+          <Button
+            size="large"
+            shape="circle"
+            icon={<UserAddOutlined />}
+            onClick={() => window.createSession(false)}
+            onMouseEnter={() => setActiveKey(1)}
+            onMouseLeave={() => setActiveKey(-1)}
+          />
+          <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
+        </div>
+      </div>
+      {state.counting ? (
+        <>
+          <h1 style={{ marginBottom: '5px' }}>On air!</h1>
+          <div>You are recording for: {state.time}</div>
+        </>
+      ) : null}
     </>
   );
 };
