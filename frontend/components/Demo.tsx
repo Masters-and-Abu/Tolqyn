@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ReactPlayer from 'react-player';
 
 declare global {
   interface Window {
@@ -8,6 +9,11 @@ declare global {
 }
 
 const Demo: React.FC = () => {
+  const [state, setState] = useState({
+    counting: false,
+    seconds: 0,
+    time: '',
+  });
   const log = (msg) => {
     document.getElementById('logs').innerHTML += msg + '<br>';
   };
@@ -21,7 +27,9 @@ const Demo: React.FC = () => {
           },
         ],
       });
-      pc.oniceconnectionstatechange = (e) => log(pc.iceConnectionState);
+      pc.oniceconnectionstatechange = (e) => {
+        log(pc.iceConnectionState);
+      };
       pc.onicecandidate = (event) => {
         if (event.candidate === null) {
           document.getElementById('localSessionDescription').value = btoa(JSON.stringify(pc.localDescription));
@@ -36,6 +44,12 @@ const Demo: React.FC = () => {
             document.getElementById('video1').srcObject = stream;
             pc.createOffer()
               .then((d) => pc.setLocalDescription(d))
+              .then(() =>
+                setState((prevState) => ({
+                  ...prevState,
+                  counting: true,
+                })),
+              )
               .catch(log);
           })
           .catch(log);
@@ -75,9 +89,22 @@ const Demo: React.FC = () => {
     };
   }
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const s = state.seconds;
+      setState((prevState) => ({
+        ...prevState,
+        seconds: state.counting ? s + 1 : s,
+        time: new Date(s * 1000).toISOString().substr(11, 8),
+      }));
+      console.log(state.seconds);
+    }, 1000);
+    return () => clearInterval(interval);
+  });
+
   return (
     <>
-      <div id="signalingContainer" style={{ display: 'none' }}>
+      <div id="signalingContainer" style={{ display: 'none', textAlign: 'center' }}>
         Browser base64 Session Description
         <br />
         <textarea id="localSessionDescription" readOnly={true}></textarea> <br />
@@ -91,6 +118,7 @@ const Demo: React.FC = () => {
       Video
       <br />
       <video id="video1" width="160" height="120" autoPlay muted></video> <br />
+      <br />
       <button className="createSessionButton" onClick={() => window.createSession(true)}>
         Publish a Broadcast
       </button>
@@ -101,6 +129,7 @@ const Demo: React.FC = () => {
       <br />
       Logs
       <br />
+      {state.counting ? <div>You are recording for: {state.time}</div> : null}
       <div id="logs"></div>
     </>
   );

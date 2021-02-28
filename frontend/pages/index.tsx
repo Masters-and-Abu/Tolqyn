@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 
 import Main from '../components/Main';
-import Demo from '../components/Demo';
 
 declare global {
   interface Window {
@@ -20,7 +19,6 @@ export default function Index() {
   return (
     <>
       <Main />
-      <Demo />
     </>
   );
 }

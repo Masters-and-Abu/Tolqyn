@@ -3,10 +3,15 @@ import { AudioOutlined } from '@ant-design/icons';
 
 import Waves from '../components/Waves';
 import AuthModal from './Modals/AuthModal';
+import React, { useState } from 'react';
+import ReactPlayer from 'react-player';
+import GachiPlayer from './GachiPlayer';
+import Demo from './Demo';
 
 const { Header } = Layout;
 // ya l'yu cristal
 export default function Main() {
+  const [showAloha, setShowAloha] = useState(false);
   return (
     <>
       <div className="main">
@@ -26,7 +31,13 @@ export default function Main() {
       </div>
       <div className="start-stream" data-aos="fade-up" data-aos-once="true">
         <h1>Start your podcast</h1>
-        <Button size="large" shape="circle" icon={<AudioOutlined />} />
+        {showAloha ? 
+        <div style={{ textAlign: 'center', }}>
+          <Demo />
+        </div>
+        :
+        <Button size="large" shape="circle" icon={<AudioOutlined />} onClick={() => setShowAloha(true)} />
+        }
       </div>
       <style>
         {`
@@ -89,6 +100,7 @@ export default function Main() {
           .start-stream h1 {
             color: #303030;
             font-size: 2rem;
+            margin-bottom: 50px;
           }
           
           .auth-footer-text {
