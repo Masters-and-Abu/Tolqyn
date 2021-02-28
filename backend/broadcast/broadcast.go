@@ -190,6 +190,7 @@ func SDP(w http.ResponseWriter, r *http.Request){
 	if cons.sdpCons != nil{
 		cons.sdpCons<-"stop"
 	}
+	time.Sleep(time.Second)
 	cons.sdpCons = make(chan string)
 	cons.sdpResp = make(chan string)
 	fmt.Println(cons.sdpResp)
