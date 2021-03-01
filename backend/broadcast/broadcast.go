@@ -13,6 +13,7 @@ import (
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/Masters-and-Abu/Tolqyn/backend/signal"
+	"github.com/Masters-and-Abu/Tolqyn/backend/tools"
 )
 
 const (
@@ -37,7 +38,7 @@ func StartSession(sdp string){ // nolint:gocognit
 	peerConnectionConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:stun1.l.google.com:19302"},
+				URLs: []string{tools.GoDotEnvVariable("STUN")},
 			},
 		},
 	}

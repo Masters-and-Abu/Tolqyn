@@ -5,35 +5,21 @@ import (
 	"github.com/Masters-and-Abu/Tolqyn/backend/auth"
 	"github.com/Masters-and-Abu/Tolqyn/backend/database"
 	"github.com/Masters-and-Abu/Tolqyn/backend/broadcast"
+	"github.com/Masters-and-Abu/Tolqyn/backend/tools"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/prometheus/common/log"
 	"golang.org/x/net/context"
 	"net/http"
-	"os"
 	"time"
 )
-
-func goDotEnvVariable(key string) string {
-
-	// load .env file
-	err := godotenv.Load(".env")
-
-	if err != nil {
-
-		fmt.Println("Error loading .env file")
-	}
-
-	return os.Getenv(key)
-}
 
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func main() {
-	database.DB = database.ConnectClient(goDotEnvVariable("MONGO_URI"))
-	port := goDotEnvVariable("PORT")
+	database.DB = database.ConnectClient(tools.GoDotEnvVariable("MONGO_URI"))
+	port := tools.GoDotEnvVariable("PORT")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	err := database.DB.Client.Connect(ctx)
