@@ -28,7 +28,7 @@ const Demo: React.FC = () => {
       const pc = new RTCPeerConnection({
         iceServers: [
           {
-            urls: 'stun:stun1.l.google.com:19302',
+            urls: `stun:${process.env.NEXT_PUBLIC_STUN}`,
           },
         ],
       });
@@ -44,7 +44,7 @@ const Demo: React.FC = () => {
           };
           if (isPublisher) {
             axios
-              .post('https://tolqyn-backend-dev.herokuapp.com/sdp', session, config)
+              .post(`${process.env.NEXT_PUBLIC_BACKEND}/sdp`, session, config)
               .then((res) => {
                 key = res.data;
                 (window as any).startSession();
@@ -61,7 +61,7 @@ const Demo: React.FC = () => {
               });
           } else {
             axios
-              .post('https://tolqyn-backend-dev.herokuapp.com/connect', session, config)
+              .post(`${process.env.NEXT_PUBLIC_BACKEND}/connect`, session, config)
               .then((res) => {
                 key = res.data;
                 (window as any).startSession();
@@ -129,8 +129,8 @@ const Demo: React.FC = () => {
   const [startDisabled, setStartDisabled] = useState(0);
 
   useEffect(() => {
-    switch(startDisabled) {
-      case 1: 
+    switch (startDisabled) {
+      case 1:
         setMsg(<p className="msg">We are preparing everything for your broadcast</p>);
         break;
       case 2:
@@ -145,34 +145,32 @@ const Demo: React.FC = () => {
   return (
     <>
       <video id="video1" width="160" height="120" autoPlay muted />
-      {startDisabled !== 1 ? 
-      <div style={{ display: 'flex', textAlign: 'center' }}>
-        <div className="createSessionButton">
-          <Button
-            size="large"
-            shape="circle"
-            icon={<ToTopOutlined />}
-            onClick={() => window.createSession(true)}
-            onMouseEnter={() => setActiveKey(0)}
-            onMouseLeave={() => setActiveKey(-1)}
-          />
-          <p style={{ color: activeKey === 0 ? '#40a9ff' : 'black' }}>Publish</p>
+      {startDisabled !== 1 ? (
+        <div style={{ display: 'flex', textAlign: 'center' }}>
+          <div className="createSessionButton">
+            <Button
+              size="large"
+              shape="circle"
+              icon={<ToTopOutlined />}
+              onClick={() => window.createSession(true)}
+              onMouseEnter={() => setActiveKey(0)}
+              onMouseLeave={() => setActiveKey(-1)}
+            />
+            <p style={{ color: activeKey === 0 ? '#40a9ff' : 'black' }}>Publish</p>
+          </div>
+          <div className="createSessionButton">
+            <Button
+              size="large"
+              shape="circle"
+              icon={<UserAddOutlined />}
+              onClick={() => window.createSession(false)}
+              onMouseEnter={() => setActiveKey(1)}
+              onMouseLeave={() => setActiveKey(-1)}
+            />
+            <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
+          </div>
         </div>
-        <div className="createSessionButton">
-          <Button
-            size="large"
-            shape="circle"
-            icon={<UserAddOutlined />}
-            onClick={() => window.createSession(false)}
-            onMouseEnter={() => setActiveKey(1)}
-            onMouseLeave={() => setActiveKey(-1)}
-          />
-          <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
-        </div>
-      </div>
-      :
-      null
-      }
+      ) : null}
       {msg}
       {state.counting ? (
         <>
