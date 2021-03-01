@@ -21,6 +21,9 @@ const Demo: React.FC = () => {
     console.log(msg);
   };
 
+  log(process.env.NEXT_PUBLIC_STUN);
+  log(process.env.NEXT_PUBLIC_BACKEND);
+
   if (typeof window !== 'undefined') {
     window.createSession = (isPublisher) => {
       setActiveKey(-1);
