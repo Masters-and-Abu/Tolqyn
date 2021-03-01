@@ -34,11 +34,11 @@ func StartSession(sdp string){ // nolint:gocognit
 
 	signal.Decode(sdp, &offer)
 	fmt.Println("decoded")
-
+	
 	peerConnectionConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{tools.GoDotEnvVariable("STUN")},
+				URLs: []string{"stun:" + tools.GoDotEnvVariable("STUN")},
 			},
 		},
 	}
