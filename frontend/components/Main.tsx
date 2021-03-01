@@ -3,10 +3,13 @@ import { AudioOutlined } from '@ant-design/icons';
 
 import Waves from '../components/Waves';
 import AuthModal from './Modals/AuthModal';
+import React, { useState } from 'react';
+import Demo from './Demo';
 
 const { Header } = Layout;
 // ya l'yu cristal
 export default function Main() {
+  const [showAloha, setShowAloha] = useState(false);
   return (
     <>
       <div className="main">
@@ -26,7 +29,13 @@ export default function Main() {
       </div>
       <div className="start-stream" data-aos="fade-up" data-aos-once="true">
         <h1>Start your podcast</h1>
-        <Button size="large" shape="circle" icon={<AudioOutlined />} />
+        {showAloha ? 
+        <div style={{ textAlign: 'center', }}>
+          <Demo />
+        </div>
+        :
+        <Button size="large" shape="circle" icon={<AudioOutlined />} onClick={() => setShowAloha(true)} />
+        }
       </div>
       <style>
         {`
@@ -78,6 +87,16 @@ export default function Main() {
             font-weight: 700;
           }
 
+          .msg {
+            width: 400px;
+            margin-top: 1.25vh;
+          }
+
+          .error-msg {
+            font-weight: 500;
+            color: red;
+          }
+
           .start-stream {
             height: 100vh;
             display: flex;
@@ -89,6 +108,7 @@ export default function Main() {
           .start-stream h1 {
             color: #303030;
             font-size: 2rem;
+            margin-bottom: 50px;
           }
           
           .auth-footer-text {
@@ -110,6 +130,18 @@ export default function Main() {
           .advice-list .ant-checkbox-wrapper, .advice-list span, .advice-list input {
             cursor: context-menu!important;
             color: black!important;
+          }
+
+          .createSessionButton {
+            line-height: 28px;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+          }
+
+          .createSessionButton p {
+            transition: all .3s ease-in-out;
+            margin-top: 7px;
           }
 
           @media (max-width: 768px) {
