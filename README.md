@@ -7,7 +7,7 @@ Tolqyn is an online streaming and podcasting service!
 - `git clone https://github.com/Masters-and-Abu/Tolqyn.git && cd Tolqyn`
 - `npm i`
 - Go to your folder
-- Commit using `npm run commit`
+- Commit using `npm run commit` or `cz`
 
 # Links:
 

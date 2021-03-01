@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p $PORT",
     "heroku-postbuild": "npm run build",
-    "commit": "cd .. && npm run commit"
+    "commit": "cd .. && npm run commit",
+    "env": "../node_modules/.bin/dotenvenc"
   },
   "config": {
     "commitizen": {
@@ -16,9 +17,16 @@
   },
   "dependencies": {
     "antd": "^4.12.3",
-    "next": "10.0.6",
+    "axios": "^0.21.1",
+    "formik": "^2.2.6",
+    "formik-antd": "^2.0.1",
+    "next": "^10.0.7",
     "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react-audio-player": "^0.14.0",
+    "react-dom": "17.0.1",
+    "react-h5-audio-player": "^3.6.1",
+    "react-player": "^2.9.0",
+    "yup": "^0.32.9"
   },
   "devDependencies": {
     "@types/node": "^14.14.22",
