@@ -25,5 +25,6 @@
   "dependencies": {
     "@digitalroute/cz-conventional-changelog-for-jira": "^6.1.0",
     "commitizen": "^4.2.3"
-  }
+  },
+  "devDependencies": {}
 }
