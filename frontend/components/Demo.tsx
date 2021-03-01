@@ -23,6 +23,8 @@ const Demo: React.FC = () => {
 
   if (typeof window !== 'undefined') {
     window.createSession = (isPublisher) => {
+      setActiveKey(-1);
+      setStartDisabled(1);
       const pc = new RTCPeerConnection({
         iceServers: [
           {
@@ -45,6 +47,7 @@ const Demo: React.FC = () => {
               .post('https://tolqyn-backend-dev.herokuapp.com/sdp', session, config)
               .then((res) => {
                 key = res.data;
+                (window as any).startSession();
               })
               .then(() =>
                 setState((prevState) => ({
@@ -54,15 +57,18 @@ const Demo: React.FC = () => {
               )
               .catch(function (error) {
                 console.log(error);
+                setStartDisabled(2);
               });
           } else {
             axios
               .post('https://tolqyn-backend-dev.herokuapp.com/connect', session, config)
               .then((res) => {
                 key = res.data;
+                (window as any).startSession();
               })
               .catch(function (error) {
                 console.log(error);
+                setStartDisabled(2);
               });
           }
         }
@@ -95,18 +101,12 @@ const Demo: React.FC = () => {
 
       (window as any).startSession = () => {
         try {
+          setStartDisabled(0);
           pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(key))));
         } catch (e) {
           alert(e);
         }
       };
-
-      const btns = document.getElementsByClassName('createSessionButton');
-      for (let i = 0; i < btns.length; i++) {
-        (btns[i] as any).style = 'display: none';
-      }
-
-      (document.getElementById('signalingContainer') as any).style = 'display: block';
     };
   }
 
@@ -123,14 +123,29 @@ const Demo: React.FC = () => {
     return () => clearInterval(interval);
   });
 
+  const [msg, setMsg] = useState(<p></p>);
+
   const [activeKey, setActiveKey] = useState(-1);
+  const [startDisabled, setStartDisabled] = useState(0);
+
+  useEffect(() => {
+    switch(startDisabled) {
+      case 1: 
+        setMsg(<p className="msg">We are preparing everything for your broadcast</p>);
+        break;
+      case 2:
+        setMsg(<p className="msg error-msg">Sorry, something went wrong! Please, try again later</p>);
+        break;
+      default:
+        setMsg(<p className="msg"></p>);
+        break;
+    }
+  }, [startDisabled]);
 
   return (
     <>
-      <div id="signalingContainer" style={{ display: 'none', textAlign: 'center' }}>
-        <Button size="large" onClick={() => (window as any).startSession()}> Start Session </Button>
-      </div>
       <video id="video1" width="160" height="120" autoPlay muted />
+      {startDisabled !== 1 ? 
       <div style={{ display: 'flex', textAlign: 'center' }}>
         <div className="createSessionButton">
           <Button
@@ -155,6 +170,10 @@ const Demo: React.FC = () => {
           <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
         </div>
       </div>
+      :
+      null
+      }
+      {msg}
       {state.counting ? (
         <>
           <h1 style={{ marginBottom: '5px' }}>On air!</h1>

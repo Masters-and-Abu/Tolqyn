@@ -87,6 +87,16 @@ export default function Main() {
             font-weight: 700;
           }
 
+          .msg {
+            width: 400px;
+            margin-top: 1.25vh;
+          }
+
+          .error-msg {
+            font-weight: 500;
+            color: red;
+          }
+
           .start-stream {
             height: 100vh;
             display: flex;
@@ -126,7 +136,7 @@ export default function Main() {
             line-height: 28px;
             display: flex;
             flex-direction: column;
-            margin: 5px 50px;
+            margin: 0 auto;
           }
 
           .createSessionButton p {
