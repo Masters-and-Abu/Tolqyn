@@ -14,10 +14,10 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/event"
-	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
 )
 
@@ -37,7 +37,6 @@ type Insert struct {
 	writeConcern             *writeconcern.WriteConcern
 	retry                    *driver.RetryMode
 	result                   InsertResult
-	serverAPI                *driver.ServerAPIOptions
 }
 
 type InsertResult struct {
@@ -105,7 +104,6 @@ func (i *Insert) Execute(ctx context.Context) error {
 		Deployment:        i.deployment,
 		Selector:          i.selector,
 		WriteConcern:      i.writeConcern,
-		ServerAPI:         i.serverAPI,
 	}.Execute(ctx, nil)
 
 }
@@ -252,15 +250,5 @@ func (i *Insert) Retry(retry driver.RetryMode) *Insert {
 	}
 
 	i.retry = &retry
-	return i
-}
-
-// ServerAPI sets the server API version for this operation.
-func (i *Insert) ServerAPI(serverAPI *driver.ServerAPIOptions) *Insert {
-	if i == nil {
-		i = new(Insert)
-	}
-
-	i.serverAPI = serverAPI
 	return i
 }

@@ -9,9 +9,9 @@ package auth
 import (
 	"context"
 
-	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 )
 
@@ -74,8 +74,7 @@ func (a *MongoDBX509Authenticator) Auth(ctx context.Context, cfg *Config) error 
 		NewCommand(requestDoc).
 		Database("$external").
 		Deployment(driver.SingleConnectionDeployment{cfg.Connection}).
-		ClusterClock(cfg.ClusterClock).
-		ServerAPI(cfg.ServerAPI)
+		ClusterClock(cfg.ClusterClock)
 	err := authCmd.Execute(ctx)
 	if err != nil {
 		return newAuthError("round trip error", err)

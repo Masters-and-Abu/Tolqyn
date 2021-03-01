@@ -14,10 +14,10 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/event"
-	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/session"
 )
 
@@ -32,7 +32,6 @@ type DropDatabase struct {
 	selector     description.ServerSelector
 	writeConcern *writeconcern.WriteConcern
 	result       DropDatabaseResult
-	serverAPI    *driver.ServerAPIOptions
 }
 
 type DropDatabaseResult struct {
@@ -90,7 +89,6 @@ func (dd *DropDatabase) Execute(ctx context.Context) error {
 		Deployment:        dd.deployment,
 		Selector:          dd.selector,
 		WriteConcern:      dd.writeConcern,
-		ServerAPI:         dd.serverAPI,
 	}.Execute(ctx, nil)
 
 }
@@ -178,15 +176,5 @@ func (dd *DropDatabase) WriteConcern(writeConcern *writeconcern.WriteConcern) *D
 	}
 
 	dd.writeConcern = writeConcern
-	return dd
-}
-
-// ServerAPI sets the server API version for this operation.
-func (dd *DropDatabase) ServerAPI(serverAPI *driver.ServerAPIOptions) *DropDatabase {
-	if dd == nil {
-		dd = new(DropDatabase)
-	}
-
-	dd.serverAPI = serverAPI
 	return dd
 }

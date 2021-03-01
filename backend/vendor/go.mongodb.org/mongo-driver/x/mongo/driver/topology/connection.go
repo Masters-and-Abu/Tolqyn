@@ -18,22 +18,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"go.mongodb.org/mongo-driver/event"
-	"go.mongodb.org/mongo-driver/internal"
-	"go.mongodb.org/mongo-driver/mongo/address"
-	"go.mongodb.org/mongo-driver/mongo/description"
 	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 	"go.mongodb.org/mongo-driver/x/mongo/driver"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/address"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/description"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/ocsp"
 	"go.mongodb.org/mongo-driver/x/mongo/driver/wiremessage"
 )
 
 var globalConnectionID uint64 = 1
-
-var (
-	defaultMaxMessageSize uint32 = 48000000
-	errResponseTooLarge   error  = errors.New("length of read message too large")
-)
 
 func nextConnectionID() uint64 { return atomic.AddUint64(&globalConnectionID, 1) }
 
@@ -59,14 +52,12 @@ type connection struct {
 	canStream            bool
 	currentlyStreaming   bool
 	connectContextMutex  sync.Mutex
-	cancellationListener cancellationListener
 
 	// pool related fields
 	pool         *pool
 	poolID       uint64
 	generation   uint64
 	expireReason string
-	poolMonitor  *event.PoolMonitor
 }
 
 // newConnection handles the creation of a connection. It does not connect the connection.
@@ -79,16 +70,14 @@ func newConnection(addr address.Address, opts ...ConnectionOption) (*connection,
 	id := fmt.Sprintf("%s[-%d]", addr, nextConnectionID())
 
 	c := &connection{
-		id:                   id,
-		addr:                 addr,
-		idleTimeout:          cfg.idleTimeout,
-		readTimeout:          cfg.readTimeout,
-		writeTimeout:         cfg.writeTimeout,
-		connectDone:          make(chan struct{}),
-		config:               cfg,
-		connectContextMade:   make(chan struct{}),
-		cancellationListener: internal.NewCancellationListener(),
-		poolMonitor:          cfg.poolMonitor,
+		id:                 id,
+		addr:               addr,
+		idleTimeout:        cfg.idleTimeout,
+		readTimeout:        cfg.readTimeout,
+		writeTimeout:       cfg.writeTimeout,
+		connectDone:        make(chan struct{}),
+		config:             cfg,
+		connectContextMade: make(chan struct{}),
 	}
 	atomic.StoreInt32(&c.connected, initialized)
 
@@ -166,29 +155,16 @@ func (c *connection) connect(ctx context.Context) {
 	// running isMaster and authentication is handled by a handshaker on the configuration instance.
 	handshaker := c.config.handshaker
 	if handshaker == nil {
-		if c.poolMonitor != nil {
-			c.poolMonitor.Event(&event.PoolEvent{
-				Type:         event.ConnectionReady,
-				Address:      c.addr.String(),
-				ConnectionID: c.poolID,
-			})
-		}
 		return
 	}
 
-	var handshakeInfo driver.HandshakeInformation
 	handshakeStartTime := time.Now()
 	handshakeConn := initConnection{c}
-	handshakeInfo, err = handshaker.GetHandshakeInformation(ctx, c.addr, handshakeConn)
+	c.desc, err = handshaker.GetDescription(ctx, c.addr, handshakeConn)
 	if err == nil {
-		// We only need to retain the Description field as the connection's description. The authentication-related
-		// fields in handshakeInfo are tracked by the handshaker if necessary.
-		c.desc = handshakeInfo.Description
 		c.isMasterRTT = time.Since(handshakeStartTime)
 		err = handshaker.FinishHandshake(ctx, handshakeConn)
 	}
-
-	// We have a failed handshake here
 	if err != nil {
 		c.processInitializationError(err)
 		return
@@ -222,13 +198,6 @@ func (c *connection) connect(ctx context.Context) {
 			}
 		}
 	}
-	if c.poolMonitor != nil {
-		c.poolMonitor.Event(&event.PoolEvent{
-			Type:         event.ConnectionReady,
-			Address:      c.addr.String(),
-			ConnectionID: c.poolID,
-		})
-	}
 }
 
 func (c *connection) wait() error {
@@ -252,30 +221,18 @@ func (c *connection) closeConnectContext() {
 	}
 }
 
-func transformNetworkError(ctx context.Context, originalError error, contextDeadlineUsed bool) error {
+func transformNetworkError(originalError error, contextDeadlineUsed bool) error {
 	if originalError == nil {
 		return nil
 	}
-
-	// If there was an error and the context was cancelled, we assume it happened due to the cancellation.
-	if ctx.Err() == context.Canceled {
-		return context.Canceled
-	}
-
-	// If there was a timeout error and the context deadline was used, we convert the error into
-	// context.DeadlineExceeded.
 	if !contextDeadlineUsed {
 		return originalError
 	}
+
 	if netErr, ok := originalError.(net.Error); ok && netErr.Timeout() {
 		return context.DeadlineExceeded
 	}
-
 	return originalError
-}
-
-func (c *connection) cancellationListenerCallback() {
-	_ = c.close()
 }
 
 func (c *connection) writeWireMessage(ctx context.Context, wm []byte) error {
@@ -304,35 +261,18 @@ func (c *connection) writeWireMessage(ctx context.Context, wm []byte) error {
 		return ConnectionError{ConnectionID: c.id, Wrapped: err, message: "failed to set write deadline"}
 	}
 
-	err = c.write(ctx, wm)
+	_, err = c.nc.Write(wm)
 	if err != nil {
 		c.close()
 		return ConnectionError{
 			ConnectionID: c.id,
-			Wrapped:      transformNetworkError(ctx, err, contextDeadlineUsed),
+			Wrapped:      transformNetworkError(err, contextDeadlineUsed),
 			message:      "unable to write wire message to network",
 		}
 	}
 
 	c.bumpIdleDeadline()
 	return nil
-}
-
-func (c *connection) write(ctx context.Context, wm []byte) (err error) {
-	go c.cancellationListener.Listen(ctx, c.cancellationListenerCallback)
-	defer func() {
-		// There is a race condition between Write and StopListening. If the context is cancelled after c.nc.Write
-		// succeeds, the cancellation listener could fire and close the connection. In this case, the connection has
-		// been invalidated but the error is nil. To account for this, overwrite the error to context.Cancelled if
-		// the abortedForCancellation flag was set.
-
-		if aborted := c.cancellationListener.StopListening(); aborted && err == nil {
-			err = context.Canceled
-		}
-	}()
-
-	_, err = c.nc.Write(wm)
-	return err
 }
 
 // readWireMessage reads a wiremessage from the connection. The dst parameter will be overwritten.
@@ -364,38 +304,6 @@ func (c *connection) readWireMessage(ctx context.Context, dst []byte) ([]byte, e
 		return nil, ConnectionError{ConnectionID: c.id, Wrapped: err, message: "failed to set read deadline"}
 	}
 
-	dst, errMsg, err := c.read(ctx, dst)
-	if err != nil {
-		// We closeConnection the connection because we don't know if there are other bytes left to read.
-		c.close()
-		message := errMsg
-		if err == io.EOF {
-			message = "socket was unexpectedly closed"
-		}
-		return nil, ConnectionError{
-			ConnectionID: c.id,
-			Wrapped:      transformNetworkError(ctx, err, contextDeadlineUsed),
-			message:      message,
-		}
-	}
-
-	c.bumpIdleDeadline()
-	return dst, nil
-}
-
-func (c *connection) read(ctx context.Context, dst []byte) (bytesRead []byte, errMsg string, err error) {
-	go c.cancellationListener.Listen(ctx, c.cancellationListenerCallback)
-	defer func() {
-		// If the context is cancelled after we finish reading the server response, the cancellation listener could fire
-		// even though the socket reads succeed. To account for this, we overwrite err to be context.Canceled if the
-		// abortedForCancellation flag is set.
-
-		if aborted := c.cancellationListener.StopListening(); aborted && err == nil {
-			errMsg = "unable to read server response"
-			err = context.Canceled
-		}
-	}()
-
 	// We use an array here because it only costs 4 bytes on the stack and means we'll only need to
 	// reslice dst once instead of twice.
 	var sizeBuf [4]byte
@@ -403,23 +311,19 @@ func (c *connection) read(ctx context.Context, dst []byte) (bytesRead []byte, er
 	// We do a ReadFull into an array here instead of doing an opportunistic ReadAtLeast into dst
 	// because there might be more than one wire message waiting to be read, for example when
 	// reading messages from an exhaust cursor.
-	_, err = io.ReadFull(c.nc, sizeBuf[:])
+	_, err := io.ReadFull(c.nc, sizeBuf[:])
 	if err != nil {
-		return nil, "incomplete read of message header", err
+		// We closeConnection the connection because we don't know if there are other bytes left to read.
+		c.close()
+		return nil, ConnectionError{
+			ConnectionID: c.id,
+			Wrapped:      transformNetworkError(err, contextDeadlineUsed),
+			message:      "incomplete read of message header",
+		}
 	}
 
 	// read the length as an int32
 	size := (int32(sizeBuf[0])) | (int32(sizeBuf[1]) << 8) | (int32(sizeBuf[2]) << 16) | (int32(sizeBuf[3]) << 24)
-
-	// In the case of an isMaster response where MaxMessageSize has not yet been set, use the hard-coded
-	// defaultMaxMessageSize instead.
-	maxMessageSize := c.desc.MaxMessageSize
-	if maxMessageSize == 0 {
-		maxMessageSize = defaultMaxMessageSize
-	}
-	if uint32(size) > maxMessageSize {
-		return nil, errResponseTooLarge.Error(), errResponseTooLarge
-	}
 
 	if int(size) > cap(dst) {
 		// Since we can't grow this slice without allocating, just allocate an entirely new slice.
@@ -432,10 +336,17 @@ func (c *connection) read(ctx context.Context, dst []byte) (bytesRead []byte, er
 
 	_, err = io.ReadFull(c.nc, dst[4:])
 	if err != nil {
-		return nil, "incomplete read of full message", err
+		// We closeConnection the connection because we don't know if there are other bytes left to read.
+		c.close()
+		return nil, ConnectionError{
+			ConnectionID: c.id,
+			Wrapped:      transformNetworkError(err, contextDeadlineUsed),
+			message:      "incomplete read of full message",
+		}
 	}
 
-	return dst, "", nil
+	c.bumpIdleDeadline()
+	return dst, nil
 }
 
 func (c *connection) close() error {
@@ -493,10 +404,6 @@ func (c *connection) getCurrentlyStreaming() bool {
 func (c *connection) setSocketTimeout(timeout time.Duration) {
 	c.readTimeout = timeout
 	c.writeTimeout = timeout
-}
-
-func (c *connection) ID() string {
-	return c.id
 }
 
 // initConnection is an adapter used during connection initialization. It has the minimum
