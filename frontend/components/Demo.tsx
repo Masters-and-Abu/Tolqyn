@@ -58,7 +58,7 @@ const Demo: React.FC = () => {
               .catch(function (error) {
                 console.log(error);
                 setStartDisabled(2);
-                setShowBtns(false);
+                setShowBtns(true);
               });
           } else {
             axios
@@ -70,7 +70,7 @@ const Demo: React.FC = () => {
               .catch(function (error) {
                 console.log(error);
                 setStartDisabled(2);
-                setShowBtns(false);
+                setShowBtns(true);
               });
           }
         }
@@ -103,9 +103,9 @@ const Demo: React.FC = () => {
 
       (window as any).startSession = () => {
         try {
+          setShowBtns(false);
           setStartDisabled(2);
           pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(key))));
-          setShowBtns(true);
         } catch (e) {
           alert(e);
         }
