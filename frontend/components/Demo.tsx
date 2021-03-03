@@ -58,6 +58,7 @@ const Demo: React.FC = () => {
               .catch(function (error) {
                 console.log(error);
                 setStartDisabled(2);
+                setShowBtns(false);
               });
           } else {
             axios
@@ -69,6 +70,7 @@ const Demo: React.FC = () => {
               .catch(function (error) {
                 console.log(error);
                 setStartDisabled(2);
+                setShowBtns(false);
               });
           }
         }
@@ -101,8 +103,9 @@ const Demo: React.FC = () => {
 
       (window as any).startSession = () => {
         try {
-          setStartDisabled(0);
+          setStartDisabled(2);
           pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(atob(key))));
+          setShowBtns(true);
         } catch (e) {
           alert(e);
         }
@@ -127,6 +130,7 @@ const Demo: React.FC = () => {
 
   const [activeKey, setActiveKey] = useState(-1);
   const [startDisabled, setStartDisabled] = useState(0);
+  const [showBtns, setShowBtns] = useState(true);
 
   useEffect(() => {
     switch(startDisabled) {
@@ -145,7 +149,7 @@ const Demo: React.FC = () => {
   return (
     <>
       <video id="video1" width="160" height="120" autoPlay muted />
-      {startDisabled !== 1 ? 
+      {startDisabled !== 1 && showBtns ? 
       <div style={{ display: 'flex', textAlign: 'center' }}>
         <div className="createSessionButton">
           <Button
