@@ -133,8 +133,8 @@ const Demo: React.FC = () => {
   const [showBtns, setShowBtns] = useState(true);
 
   useEffect(() => {
-    switch(startDisabled) {
-      case 1: 
+    switch (startDisabled) {
+      case 1:
         setMsg(<p className="msg">We are preparing everything for your broadcast</p>);
         break;
       case 2:
@@ -149,34 +149,32 @@ const Demo: React.FC = () => {
   return (
     <>
       <video id="video1" width="160" height="120" autoPlay muted />
-      {startDisabled !== 1 && showBtns ? 
-      <div style={{ display: 'flex', textAlign: 'center' }}>
-        <div className="createSessionButton">
-          <Button
-            size="large"
-            shape="circle"
-            icon={<ToTopOutlined />}
-            onClick={() => window.createSession(true)}
-            onMouseEnter={() => setActiveKey(0)}
-            onMouseLeave={() => setActiveKey(-1)}
-          />
-          <p style={{ color: activeKey === 0 ? '#40a9ff' : 'black' }}>Publish</p>
+      {startDisabled !== 1 && showBtns ? (
+        <div style={{ display: 'flex', textAlign: 'center' }}>
+          <div className="createSessionButton">
+            <Button
+              size="large"
+              shape="circle"
+              icon={<ToTopOutlined />}
+              onClick={() => window.createSession(true)}
+              onMouseEnter={() => setActiveKey(0)}
+              onMouseLeave={() => setActiveKey(-1)}
+            />
+            <p style={{ color: activeKey === 0 ? '#40a9ff' : 'black' }}>Publish</p>
+          </div>
+          <div className="createSessionButton">
+            <Button
+              size="large"
+              shape="circle"
+              icon={<UserAddOutlined />}
+              onClick={() => window.createSession(false)}
+              onMouseEnter={() => setActiveKey(1)}
+              onMouseLeave={() => setActiveKey(-1)}
+            />
+            <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
+          </div>
         </div>
-        <div className="createSessionButton">
-          <Button
-            size="large"
-            shape="circle"
-            icon={<UserAddOutlined />}
-            onClick={() => window.createSession(false)}
-            onMouseEnter={() => setActiveKey(1)}
-            onMouseLeave={() => setActiveKey(-1)}
-          />
-          <p style={{ color: activeKey === 1 ? '#40a9ff' : 'black' }}>Join</p>
-        </div>
-      </div>
-      :
-      null
-      }
+      ) : null}
       {msg}
       {state.counting ? (
         <>
